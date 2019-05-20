@@ -1,6 +1,7 @@
 package producto.dao;
 
-
+import conexion.conexionBD;
+import empleado.dao.EmpleadoDAOImp;
 import empleado.dominio.Empleado;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,43 +25,40 @@ public class ProductoDAOImp implements ProductoDAO {
 
     Scanner scan = new Scanner(System.in);
 
-    String archivoProduc = "src/File/archivoProducto.txt";
-
-    
     //@Override
     public ProductoDAOImp() {
 
-        Path path = Paths.get(this.archivoProduc);
-
         List<Producto> productList = new ArrayList<Producto>();
 
-        try ( var reader = Files.newBufferedReader(path)) {
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
 
-            int productCode = 0;
-            String productName = null;
-            String productDescription = null;
-            double productPrice = 0.0;
+            Statement sentencia = conection.createStatement();
 
-            while (reader.readLine() != null) {
+            ResultSet resultado = sentencia.executeQuery("Select * from productos");
 
-                reader.readLine();
-                productCode = Integer.parseInt(reader.readLine().trim());
+            try {
 
-                reader.readLine();
-                productName = reader.readLine().trim();
+                while (resultado.next()) {
 
-                reader.readLine();
-                productDescription = reader.readLine().trim();
+                    while (resultado.next()) {
+                        int codigo = resultado.getInt("p_codigo");
+                        String nombre = resultado.getString("p_nombre");
+                        String descripcion = resultado.getString("p_descripcion");
+                        Double precio = resultado.getDouble("p_precio");
 
-                reader.readLine();
-                productPrice = Double.parseDouble(reader.readLine().trim().replace(',', '.'));
+                        productList.add(new Producto(codigo, nombre, descripcion, precio));
+                    }
+                }
 
-                productList.add(new Producto(productCode, productName, productDescription, productPrice));
+            } catch (Exception ex) {
+                System.out.println("Error de lectura en: ");
 
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(EmpleadoDAOImp.class.getName()).log(Level.SEVERE, null, ex);
 
-        } catch (IOException ex) {
-            ex.printStackTrace();
         }
 
         setProducts(productList);
@@ -68,60 +66,36 @@ public class ProductoDAOImp implements ProductoDAO {
     }
 
     // @Override
-    public Producto leeProductos() {
+    public List<Producto> leerProducts() {
 
         Producto Productos = new Producto();
-        List<Producto> productoList = new ArrayList<>();
-        NumberFormat formatoNumero = NumberFormat.getInstance(Locale.FRANCE);// 
-        // dependiendo de la localidad es punto o coma
-        Number numero;
-        String liniaconDatos;
+        List<Producto> productList = new ArrayList<>();
 
-        try ( var archivo = Files.newBufferedReader(Paths.get(archivoProduc))) {
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
 
-            while (archivo.readLine() != null) {
-                
-                archivo.readLine();
-                liniaconDatos = archivo.readLine().trim();
-                numero = formatoNumero.parse(liniaconDatos);
-                int codigo = numero.intValue();
+            Statement sentencia = conection.createStatement();
 
-                archivo.readLine();
-               
-                liniaconDatos = archivo.readLine().trim();
-                String nombre = liniaconDatos;
+            ResultSet resultado = sentencia.executeQuery("Select * from empleados");
 
-                archivo.readLine();
-               
-                liniaconDatos = archivo.readLine().trim();
-                String descripcion = liniaconDatos;
+            while (resultado.next()) {
 
-                archivo.readLine();
-                
-                liniaconDatos = archivo.readLine().trim();
-                numero = formatoNumero.parse(liniaconDatos);
-                double precio = numero.doubleValue();
+                while (resultado.next()) {
+                    int codigo = resultado.getInt("p_codigo");
+                    String nombre = resultado.getString("p_nombre");
+                    String descripcion = resultado.getString("p_descripcion");
+                    Double precio = resultado.getDouble("p_precio");
 
-                Productos = new Producto(codigo, nombre, descripcion, precio);
-              
-                productoList.add(new Producto(codigo, nombre, descripcion, precio));
-
+                    productList.add(new Producto(codigo, nombre, descripcion, precio));
+                }
             }
 
-        } catch (ParseException e) {
-            System.out.println("Error de fromato en: " + archivoProduc);
-
-        } catch (IOException ex) {
-            System.out.println("Error de lectura en: " + archivoProduc);
+        } catch (SQLException ex) {
+            System.out.println("Error de lectura en: ");
 
         }
-
-        return Productos;
-    }
-
-    // @Override
-    public List<Producto> leerProductos() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return productList;
     }
 
     public List<Producto> getProductos() {
@@ -133,61 +107,49 @@ public class ProductoDAOImp implements ProductoDAO {
     }
 
     public void updateCode(int productCode, int productNewCode) {
-        Producto product = new Producto();
+        
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
 
-        for (int i = 0; i < this.products.size(); i++) {
-            if (this.products.get(i).getCodigo() == productCode) {
-                product.setDescripcion(this.products.get(i).getDescripcion());
-                product.setPrecio(this.products.get(i).getPrecio());
-                product.setNombre(this.products.get(i).getNombre());
-                product.setCodigo(productNewCode);
-                this.products.set(i, product);
-            }
+            Statement sentencia = conection.createStatement();
+
+            ResultSet resultado = sentencia.executeQuery("Update productos set p_codigo=" +productNewCode + " where p_codigo=" + productCode);
+        } catch (SQLException ex) {
+            System.out.println("Error a lo hora de actualizar");
+
         }
-        this.escribirEnArchivo();
     }
 
-    public void updateName(int productCode, String nuwvoNombre) {
+    public void updateName(int productCode, String nuevoNombre) {
 
-        Producto product = new Producto();
-        for (int i = 0; i < this.products.size(); i++) {
-            if (this.products.get(i).getCodigo() == productCode) {
-                product.setCodigo(this.products.get(i).getCodigo());
-                product.setDescripcion(this.products.get(i).getDescripcion());
-                product.setPrecio(this.products.get(i).getPrecio());
-                product.setNombre(nuwvoNombre);
-                this.products.set(i, product);
-            }
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
+
+            Statement sentencia = conection.createStatement();
+
+            ResultSet resultado = sentencia.executeQuery("Update productos set p_nombre=" +nuevoNombre + " where p_codigo=" + productCode);
+        } catch (SQLException ex) {
+            System.out.println("Error a lo hora de actualizar");
+
         }
-        this.escribirEnArchivo();
     }
 
     //@Override
-    public void escribirEnArchivo() {
-        String productListString = this.toString();
-        String archivoPorduc = "src/File/archivoProducto.txt";
-        try {
-            FileWriter writer = new FileWriter(archivoPorduc);
-            writer.write(productListString);
-            writer.close();
-
-        } catch (IOException ex) {
-            Logger.getLogger(ProductoDAOImp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 
     public void updatePrice(int productCode, double productPrice) {
-        Producto product = new Producto();
-        for (int i = 0; i < this.products.size(); i++) {
-            if (this.products.get(i).getCodigo() == productCode) {
-                product.setDescripcion(this.products.get(i).getDescripcion());
-                product.setPrecio(productPrice);
-                product.setNombre(this.products.get(i).getNombre());
-                product.setCodigo(this.products.get(i).getCodigo());
-                this.products.set(i, product);
-            }
+      try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
+
+            Statement sentencia = conection.createStatement();
+
+            ResultSet resultado = sentencia.executeQuery("Update productos set p_precio=" +productPrice+ " where p_codigo=" + productCode);
+        } catch (SQLException ex) {
+            System.out.println("Error a lo hora de actualizar");
+
         }
-        this.escribirEnArchivo();
     }
 
     @Override

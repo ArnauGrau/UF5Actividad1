@@ -1,9 +1,13 @@
 package empleado.dao;
 
+import java.sql.Connection;
+import conexion.conexionBD;
+import static conexion.conexionBD.conectar;
 import empleado.dominio.Empleado;
 import java.sql.SQLException;
 import java.util.List;
 import empleado.dao.EmpleadoDAO;
+import java.sql.Statement;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,47 +20,46 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.sql.ResultSet;
 
 public class EmpleadoDAOImp implements EmpleadoDAO {
 
     private List<Empleado> empleados;
 
     public EmpleadoDAOImp() {
-        String archivoEmple = "src/File/archivoEmple.txt";
-        Path path = Paths.get(archivoEmple);
+        List<Empleado> empleadoList = new ArrayList<>();
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
 
-        List<Empleado> employeesList = new ArrayList<Empleado>();
+            Statement sentencia = conection.createStatement();
 
-        try (var reader = Files.newBufferedReader(path)) {
+            ResultSet resultado = sentencia.executeQuery("Select * from empleados");
 
-            int employeeAccessCode = 0;
-            String employeeName = null;
-            String employeeLastName = null;
-            String employeePassword = null;
+            try {
 
-            while (reader.readLine() != null) {
+                while (resultado.next()) {
 
-                reader.readLine();
-                employeeAccessCode = Integer.parseInt(reader.readLine().trim());
+                    while (resultado.next()) {
+                        int codigo = resultado.getInt("e_codigo");
+                        String nombre = resultado.getString("e_nombre");
+                        String apellidos = resultado.getString("e_apellidos");
+                        String password = resultado.getString("e_password");
 
-                reader.readLine();
-                employeeName = reader.readLine().trim();
+                        empleadoList.add(new Empleado(codigo, nombre, apellidos, password));
+                    }
+                }
 
-                reader.readLine();
-                employeeLastName = reader.readLine().trim();
-
-                reader.readLine();
-                employeePassword = reader.readLine().trim();
-
-                employeesList.add(new Empleado(employeeAccessCode, employeeName, employeeLastName, employeePassword));
+            } catch (Exception ex) {
+                System.out.println("Error de lectura en: ");
 
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(EmpleadoDAOImp.class.getName()).log(Level.SEVERE, null, ex);
 
-        } catch (IOException ex) {
-            ex.printStackTrace();
         }
 
-        setEmpleados(employeesList);
+        setEmpleados(empleadoList);
 
     }
 
@@ -70,40 +73,34 @@ public class EmpleadoDAOImp implements EmpleadoDAO {
 
     @Override
     public List<Empleado> leerEmpleados() {
-        String archivoEmple = "src/File/archivoEmple.txt";
         List<Empleado> empleadoList = new ArrayList<>();
-        NumberFormat formatoNumero = NumberFormat.getInstance(Locale.FRANCE);// 
-        Number numero;
-        String liniaconDatos;
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
 
-        try (var archivo = Files.newBufferedReader(Paths.get(archivoEmple))) {
+            Statement sentencia = conection.createStatement();
 
-            while (archivo.readLine() != null) {
+            ResultSet resultado = sentencia.executeQuery("Select * from empleados");
 
-                archivo.readLine();
-                liniaconDatos = archivo.readLine().trim();
-                numero = formatoNumero.parse(liniaconDatos);
-                int codigoComp = numero.intValue();
+            try {
 
-                archivo.readLine();
+                while (resultado.next()) {
 
-                String nombre = archivo.readLine().trim();
+                    while (resultado.next()) {
+                        int codigo = resultado.getInt("e_codigo");
+                        String nombre = resultado.getString("e_nombre");
+                        String apellidos = resultado.getString("e_apellidos");
+                        String password = resultado.getString("e_password");
 
-                archivo.readLine();
+                        empleadoList.add(new Empleado(codigo, nombre, apellidos, password));
+                    }
+                }
 
-                String apellidos = archivo.readLine().trim();
+            } catch (SQLException ex) {
+                Logger.getLogger(EmpleadoDAOImp.class.getName()).log(Level.SEVERE, null, ex);
 
-                archivo.readLine();
-
-                String password = archivo.readLine().trim();
-
-                empleadoList.add(new Empleado(codigoComp, nombre, apellidos, password));
             }
-        } catch (ParseException e) {
-            System.out.println("Error de fromato en: " + archivoEmple);
-
-        } catch (IOException ex) {
-            System.out.println("Error de lectura en: " + archivoEmple);
+        } catch (Exception e) {
 
         }
         return empleadoList;
@@ -112,72 +109,46 @@ public class EmpleadoDAOImp implements EmpleadoDAO {
     @Override
 
     public Empleado getEmpleadoPorCodigo(int codigo) {
-        String archivoEmple = "src/File/archivoEmple.txt";
-        Empleado empleado = new Empleado();
-        NumberFormat formatoNumero = NumberFormat.getInstance(Locale.FRANCE);// 
-        Number numero;
-        String liniaconDatos;
 
-        try (var archivo = Files.newBufferedReader(Paths.get(archivoEmple))) {
+        Empleado empleado = null;
+        try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
 
-            while (archivo.readLine() != null) {
+            Statement sentencia = conection.createStatement();
 
-                archivo.readLine();
-                liniaconDatos = archivo.readLine().trim();
-                numero = formatoNumero.parse(liniaconDatos);
-                int codigoComp = numero.intValue();
+            ResultSet resultado = sentencia.executeQuery("Select * from empleados where e_codigo = codigo");
 
-                archivo.readLine();
-
-                String nombre = archivo.readLine().trim();
-
-                archivo.readLine();
-
-                String apellidos = archivo.readLine().trim();
-
-                archivo.readLine();
-
-                String password = archivo.readLine().trim();
-
-                if (codigoComp == codigo) {
-                    empleado = new Empleado(codigo, nombre, apellidos, password);
-                } else {
-
-                }
+            while (resultado.next()) {
+                int newCodigo = resultado.getInt("e_codigo");
+                String nombre = resultado.getString("e_nombre");
+                String apellidos = resultado.getString("e_apellidos");
+                String password = resultado.getString("e_password");
+                
+                empleado = new Empleado(newCodigo, nombre, apellidos, password);
             }
-
-        } catch (ParseException e) {
-            System.out.println("Error de fromato en: " + archivoEmple);
-
-        } catch (IOException ex) {
-            System.out.println("Error de lectura en: " + archivoEmple);
+        } catch (SQLException ex) {
+            System.out.println("Error de lectura en: ");
 
         }
 
         return empleado;
-
     }
 
-    public void escribirEnArchivo() {
-        String employeeListString = this.toString();
-        String archivoEmple = "src/File/archivoEmple.txt";
-        try {
-            FileWriter writer = new FileWriter(archivoEmple);
-            writer.write(employeeListString);
-            writer.close();
 
-        } catch (IOException ex) {
-            Logger.getLogger(EmpleadoDAOImp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 
     public void actualizarPassword(Empleado employee, String employeePassword) {
-        for (int i = 0; i < getEmpleados().size(); i++) {
-            if (getEmpleados().get(i).getCodigo() == employee.getCodigo()) {
-                this.empleados.get(i).setPassword(employeePassword);
-            }
+         try {
+            Connection conection = null;
+            conexionBD.conectar(conection);
+
+            Statement sentencia = conection.createStatement();
+
+            ResultSet resultado = sentencia.executeQuery("Update empleados set e_password="+employeePassword+" where e_codigo="+employee.getCodigo());
+        } catch (SQLException ex) {
+            System.out.println("Error a lo hora de actualizar");
+
         }
-        this.escribirEnArchivo();
     }
 
     @Override

@@ -5,7 +5,7 @@ import empleado.dominio.Empleado;
 import empleado.errores.passwordIncorrectException;
 import empleado.errores.userIncorrectException;
 import factura.Pedido;
-import java.awt.Color;
+import conexion.conexionBD;
 import java.util.ArrayList;
 import java.util.List;
 import producto.dominio.Producto;
@@ -26,6 +26,7 @@ public class GestionTienda {
     }
 
     public void iniciar() {
+        
         boolean esLoginCorrecto = false;
         while (!esLoginCorrecto) {
             try {

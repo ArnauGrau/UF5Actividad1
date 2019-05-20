@@ -6,7 +6,7 @@ import producto.dominio.Producto;
 
 public interface ProductoDAO {
 
-    List<Producto> leerProductos();  //Read
+    List<Producto> leerProducts();  //Read
 
     boolean actualizarProducto(Producto producto); // Update
     

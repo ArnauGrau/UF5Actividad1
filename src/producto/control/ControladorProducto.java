@@ -9,7 +9,7 @@ public class ControladorProducto {
 
     static public List<Producto> leerProductos() {
         ProductoDAO pdao = new ProductoDAOImp();
-        return pdao.leerProductos();
+        return pdao.leerProducts();
     }
 
     static public boolean actualizarProducto(Producto producto) {
